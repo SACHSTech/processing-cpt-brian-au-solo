@@ -1,22 +1,40 @@
 import processing.core.PApplet;
+import processing.core.PImage;
 
 public class Sketch extends PApplet {
 	
-	
-  /**
-   * Called once at the beginning of execution, put your size all in this method
-   */
-  public void settings() {
-	// put your size call here
-    size(400, 400);
-  }
+	// Declare images
+  PImage imgStartTitle;
+  PImage imgGameOver;
+  PImage imgBackground;
+  PImage imgMisses;
 
-  /** 
-   * Called once at the beginning of execution.  Add initial set up
-   * values here i.e background, stroke, fill etc.
-   */
+  // Fruit contact and player navigation
+  boolean blnFruitHit = false;
+  boolean wPressed = false;
+  boolean aPressed = false;
+  boolean sPressed = false;
+  boolean dPressed = false;
+
+  // Boolean for screens
+  boolean blnStartTitle;
+  boolean blnGameOver;
+
+  // Player lives and score
+  int intScore = 0;
+  int intMisses = 0;
+
+  public void settings() {
+	// screen size
+  size(600, 600);
+}
+
   public void setup() {
-    background(210, 255, 173);
+    
+    // Enter images
+    imgStartTitle = loadImage("StartTitle.jpg");
+    imgGameOver = loadImage("");
+
   }
 
   /**
