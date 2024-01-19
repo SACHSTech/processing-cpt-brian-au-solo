@@ -12,6 +12,7 @@ public class Sketch extends PApplet {
   PImage imgKatanaSlice;
   PImage imgFruit1;
   PImage imgFruit2;
+  PImage imgBomb;
 
   // Boolean for screens
   boolean blnStartTitle;
@@ -22,15 +23,19 @@ public class Sketch extends PApplet {
   int intScore = 0;
 
   // Storing fruits into arrays and if they can be seen or not
-  float[] fltFruitY = new float[40];
-  float[] fltFruitX = new float[40];
-  float[] fltFruitY2 = new float[40];
-  float[] fltFruitX2 = new float[40];
-  boolean [] blnFruitHide = new boolean[40];
+  float[] fltFruitY = new float[10];
+  float[] fltFruitX = new float[10];
+  float[] fltFruitY2 = new float[10];
+  float[] fltFruitX2 = new float[10];
+  float[] fltBombX = new float[5];
+  float[] fltBombY = new float[5];
+  boolean [] blnFruitHide = new boolean[10];
+  boolean [] blnFruitHide2 = new boolean[10];
+  boolean [] blnBombHide = new boolean[5];
 
    // Fruit collision detection, fruit speed, spawn location, player lives
    int intFruit = 0;
-   int intFruitSpeed = 3;
+   int intFruitSpeed = 5;
    int intLives = 3;
 
    // Indicates the katana slice is not active
@@ -67,6 +72,9 @@ public class Sketch extends PApplet {
 
     imgFruit2 = loadImage("watermelon.png");
     imgFruit2.resize(80, 80);
+    
+    imgBomb = loadImage("bomb.png");
+    imgBomb.resize(80, 80);
 
     imgMisses = loadImage("heart.png");
 
@@ -78,12 +86,22 @@ public class Sketch extends PApplet {
     // Initialize fruit positions
     for (int i = 0; i < fltFruitX.length; i++) {
       fltFruitX[i] = random(width);
-      fltFruitY[i] = -50 - random(400);
-      fltFruitX2[i] = random(width);
-      fltFruitY2[i] = -50 - random(400);
+      fltFruitY[i] = -10 - random(800);
       blnFruitHide[i] = false;
    }
+
+   for (int i = 0; i < fltFruitX2.length; i++) {
+      fltFruitX2[i] = random(width);
+      fltFruitY2[i] = -20 - random(800);
+      blnFruitHide2[i] = false;
   }
+
+    for (int i = 0; i < fltBombX.length; i++) {
+      fltBombX[i] = random(width);
+      fltBombY[i] = -80 - random(800);
+      blnBombHide[i] = false;
+  }
+}
 
   public void draw() {
     image(imgStartTitle, 0, 0);
@@ -94,27 +112,37 @@ public class Sketch extends PApplet {
         for (int i = 0; i < fltFruitX.length; i++) {
             if (!blnFruitHide[i]) {
                 // Draw the fruits
-                if (intFruit % 2 == 0) {
-                    image(imgFruit1, fltFruitX[i], fltFruitY[i], 50, 50);
-                } else {
-                    image(imgFruit2, fltFruitX2[i], fltFruitY2[i], 50, 50);
+                    image(imgFruit1, fltFruitX[i], fltFruitY[i], 80, 80);
                 }
 
                 // Move the fruit down
                 fltFruitY[i] += intFruitSpeed;
 
-                // Check for collision with katana
+        for (int n = 5; n < fltFruitX2.length; n++) {
+            if (!blnFruitHide[n]) {
+                // Draw the fruits
+                    image(imgFruit2, fltFruitX[n], fltFruitY[n], 80, 80);
+                }
+
+                // Move the fruit down
+                fltFruitY2[n] += intFruitSpeed;
+
+                // Fruit collision with katana, hide fruit, increase score
                 if (dist(fltFruitX[i], fltFruitY[i], mouseX, mouseY) < 30) {
-                    blnFruitHide[i] = true;  // Hide the fruit
-                    intScore += 10;  // Increase the score
-                    // Reset the fruit position
-                    fltFruitY[i] = -50 - random(400);
+                    blnFruitHide[i] = true; 
+                    intScore += 10;
+                }
+                if (blnFruitHide[i] == true) {
+                    fltFruitY[i] = -50 - random(800);
                     fltFruitX[i] = random(width);
                 }
 
                 // Check for misses
-                if (fltFruitY[i] > height) {
-                    blnFruitHide[i] = true;  // Hide the fruit
+                if (fltFruitY[i] > height || fltFruitY2[n] > height) {
+                    fltFruitY[i] = -50 - random(800);
+                    fltFruitX[i] = random(width);
+                    fltFruitY2[n] = -50 - random(800);
+                    fltFruitX2[n] = random(width);
                     intLives--;  // Increase the misses
                     if (intLives == 0) {
                         blnGameOver = true;  // Game over if 3 misses
@@ -161,7 +189,7 @@ public void mouseClicked() {
 
   public void playKatanaSliceAnimation() {
     imageMode(CENTER);
-    image(imgKatanaSlice, mouseX, mouseY, 55, 75);
+    image(imgKatanaSlice, mouseX, mouseY, 155, 175);
     katanaSliceFrame++;
 
     if(katanaSliceFrame > 10) {
