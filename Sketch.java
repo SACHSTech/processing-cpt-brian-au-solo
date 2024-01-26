@@ -26,19 +26,19 @@ public class Sketch extends PApplet {
   // more variables
   int intScore = 0;
   int intFruitSpeed = 3;
-  int intFruitSpeed2 = 5;
+  int intFruitSpeed2 = 4;
   int intLives = 3;
   int katanaSliceFrame = -1;
 
   // Arrays to store fruit, bomb positions and their states
-  float[] fltFruitY = new float[4];
-  float[] fltFruitX = new float[4];
-  float[] fltFruitY2 = new float[3];
-  float[] fltFruitX2 = new float[3];
+  float[] fltFruitY = new float[5];
+  float[] fltFruitX = new float[5];
+  float[] fltFruitY2 = new float[5];
+  float[] fltFruitX2 = new float[5];
   float[] fltBombX = new float[3];
   float[] fltBombY = new float[3];
-  boolean[] blnFruitHide = new boolean[4];
-  boolean[] blnFruitHide2 = new boolean[3];
+  boolean[] blnFruitHide = new boolean[5];
+  boolean[] blnFruitHide2 = new boolean[5];
   boolean[] blnBombHide = new boolean[3];
 
   /**
@@ -133,8 +133,8 @@ public class Sketch extends PApplet {
       }
       fltFruitY[i] += intFruitSpeed;
   
-      // Remove the reset condition
-      if (fltFruitY[i] > height) {
+      // Reset position and lose life when fruit goes below the screen
+      if (fltFruitY[i] > height && !blnFruitHide[i]) {
         intLives--;
         resetFruit(i);
         blnFruitHide[i] = false;
@@ -152,8 +152,8 @@ public class Sketch extends PApplet {
       }
       fltFruitY2[i] += intFruitSpeed2;
   
-      // Remove the reset condition
-      if (fltFruitY2[i] > height) {
+      // Reset position and lose life when fruit goes below the screen
+      if (fltFruitY2[i] > height && !blnFruitHide2[i]) {
         intLives--;
         resetFruit2(i);
         blnFruitHide2[i] = false;
@@ -190,6 +190,7 @@ public class Sketch extends PApplet {
    * @param index apple reset
    */
   public void resetFruit(int index) {
+    blnFruitHide[index] = false;
     fltFruitY[index] = random(-200);
     fltFruitX[index] = random(width);
   }
@@ -199,6 +200,7 @@ public class Sketch extends PApplet {
    * @param index watermelon reset
    */
   public void resetFruit2(int index) {
+    blnFruitHide2[index] = false;
     fltFruitY2[index] = random(-100);
     fltFruitX2[index] = random(width);
   }
@@ -321,7 +323,7 @@ public boolean anyFruitBelowHeight() {
       if (!blnFruitHide[i] && checkFruitCollision(fltFruitX[i], fltFruitY[i], 20)) {
         // Reset the fruit position
         resetFruit(i);
-        blnFruitHide[i] = true;  // Set hide state to true
+        blnFruitHide[i] = false;  // Set hide state to false
       }
     }
   
@@ -329,7 +331,7 @@ public boolean anyFruitBelowHeight() {
       if (!blnFruitHide2[i] && checkFruitCollision(fltFruitX2[i], fltFruitY2[i], 20)) {
         // Reset the fruit position
         resetFruit2(i);
-        blnFruitHide2[i] = true;  // Set hide state to true
+        blnFruitHide2[i] = false;  // Set hide state to false
       }
     }
   }
