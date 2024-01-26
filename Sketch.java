@@ -1,8 +1,13 @@
 import processing.core.PApplet;
 import processing.core.PImage;
 
+/**
+ * Slicing fruit game
+ * You must slice fruits and avoid slicing bombs to score points.
+ */
 public class Sketch extends PApplet {
 
+  // Images 
   PImage imgStartTitle;
   PImage imgBackground;
   PImage imgMisses;
@@ -13,42 +18,41 @@ public class Sketch extends PApplet {
   PImage imgFruit2;
   PImage imgBomb;
 
-  // Boolean for screens
-  boolean blnStartTitle;
-  boolean blnGameOver;
-  boolean blnKatanaSlice;
+  // Game screen, animation variables
+  boolean blnStartTitle = true;
+  boolean blnGameOver = false;
+  boolean blnKatanaSlice = false;
 
-  // Player score
+  // more variables
   int intScore = 0;
+  int intFruitSpeed = 3;
+  int intFruitSpeed2 = 6;
+  int intLives = 3;
+  int katanaSliceFrame = -1;
 
-  // Storing fruits into arrays and if they can be seen or not
-  float[] fltFruitY = new float[40];
-  float[] fltFruitX = new float[40];
-  float[] fltFruitY2 = new float[40];
-  float[] fltFruitX2 = new float[40];
-  float[] fltBombX = new float[5];
-  float[] fltBombY = new float[5];
-  boolean [] blnFruitHide = new boolean[40];
-  boolean [] blnFruitHide2 = new boolean[40];
-  boolean [] blnBombHide = new boolean[5];
+  // Arrays to store fruit, bomb positions and their states
+  float[] fltFruitY = new float[7];
+  float[] fltFruitX = new float[7];
+  float[] fltFruitY2 = new float[7];
+  float[] fltFruitX2 = new float[7];
+  float[] fltBombX = new float[3];
+  float[] fltBombY = new float[3];
+  boolean[] blnFruitHide = new boolean[7];
+  boolean[] blnFruitHide2 = new boolean[7];
+  boolean[] blnBombHide = new boolean[3];
 
-   // Fruit collision detection, fruit speed, spawn location, player lives
-   int intFruit = 0;
-   int intFruitSpeed = 5;
-   int intLives = 3;
-
-   // Indicates the katana slice is not active
-   int katanaSliceFrame = -1; 
-
-
+  /**
+   * screen size
+   */
   public void settings() {
-	// screen size
-  size(1000, 800);
-}
+    size(1000, 800);
+  }
 
+  /**
+   * Load images, initialize arrays, initialize game.
+   */
   public void setup() {
-
-    // Enter images
+    // Load images and resize them
     imgStartTitle = loadImage("StartTitle.jpg");
     imgStartTitle.resize(1000, 800);
 
@@ -76,155 +80,298 @@ public class Sketch extends PApplet {
 
     imgMisses = loadImage("heart.png");
 
-    // Boolean for which picture is shown
-    blnStartTitle = true; 
-    blnGameOver = false;
-    blnKatanaSlice = false;
-
-    // Initialize fruit positions
+    // Initialize fruit, bomb positions and their states
     for (int i = 0; i < fltFruitX.length; i++) {
       fltFruitX[i] = random(width);
-      fltFruitY[i] = -10 - random(800);
+      fltFruitY[i] = random(-400);
       blnFruitHide[i] = false;
-   }
+    }
 
-    for (int i = 0; i < fltFruitX.length; i++) {
+    for (int i = 0; i < fltFruitX2.length; i++) {
       fltFruitX2[i] = random(width);
-      fltFruitY2[i] = -20 - random(800);
+      fltFruitY2[i] = random(-300);
       blnFruitHide2[i] = false;
     }
 
     for (int i = 0; i < fltBombX.length; i++) {
       fltBombX[i] = random(width);
-      fltBombY[i] = -80 - random(800);
+      fltBombY[i] = random(-100);
       blnBombHide[i] = false;
     }
   }
 
   /**
-   * Called repeatedly, anything drawn to the screen goes here
+   * Game screen
    */
   public void draw() {
-    image(imgStartTitle, 0, 0);
-    
-    if (!blnGameOver && !blnStartTitle) {
-      image(imgBackground, 0, 0);
+    background(255);
 
-    // Draw and move apples, watermelons, and bombs
+  if (blnStartTitle) {
+    image(imgStartTitle, 0, 0);
+  } else if (blnGameOver) {
+    image(imgGameOver, 0, 0);
+    displayScore();
+  } else {
+    image(imgBackground, 0, 0);
+    drawGameElements();
+  }
+}
+
+  /**
+   * player score
+   */
+  public void displayScore() {
+    textSize(32);
+    fill(255, 0, 0);
+    textAlign(CENTER, CENTER);
+    textFont(createFont("Arial Bold", 40));
+    text("Your score: " + intScore, width / 2, height / 2 - 120);
+    text("Click to Play Again", width / 2, height / 2);
+  }
+
+  /**
+   * Game elements such as fruits, bombs, lives, and katana animation
+   */
+  public void drawGameElements() {
+    drawAndMoveFruits();
+    drawLives();
+    drawAndMoveBombs();
+    playKatanaSliceAnimation();
+  }
+
+  /**
+   * Draws, moves the fruits on the screen
+   */
+  public void drawAndMoveFruits() {
     for (int i = 0; i < fltFruitX.length; i++) {
       if (!blnFruitHide[i]) {
         image(imgFruit1, fltFruitX[i], fltFruitY[i], 80, 80);
       }
       fltFruitY[i] += intFruitSpeed;
+  
+      // Remove the reset condition
+      if (fltFruitY[i] > height) {
+        intLives--;
+      }
+  
+      if (intLives != 0 && checkFruitCollision(fltFruitX[i], fltFruitY[i], 25)) {
+        blnFruitHide[i] = true;
+        intScore += 10;
+      }
 
+      if (blnFruitHide[i]) {
+      fltFruitY[i] = random(-50);
+      blnFruitHide[i] = false;
+    }
+  }
+  
+    for (int i = 0; i < fltFruitX2.length; i++) {
       if (!blnFruitHide2[i]) {
         image(imgFruit2, fltFruitX2[i], fltFruitY2[i], 80, 80);
       }
-      fltFruitY2[i] += intFruitSpeed;
+      fltFruitY2[i] += intFruitSpeed2;
+  
+      // Remove the reset condition
+      if (fltFruitY2[i] > height) {
+        intLives--;
+      }
+  
+      if (intLives != 0 && checkFruitCollision(fltFruitX2[i], fltFruitY2[i], 25)) {
+        blnFruitHide2[i] = true;
+        intScore += 20;
+      }
 
+      if (blnFruitHide2[i]) {
+        fltFruitY2[i] = random(-30);
+        blnFruitHide[i] = false;
+      }
+    }
+    decreaseLivesOnMiss();
+  }
+  /**
+   * Checks for collision between the katana and fruits
+   * @param fruitX fruit X-coordinate
+   * @param fruitY fruit Y-coordinate
+   * @param collisionRadius radius collision
+   * @return True if collision is detected, false otherwise
+   */
+  public boolean checkFruitCollision(float fruitX, float fruitY, int collisionRadius) {
+    return dist(fruitX, fruitY, mouseX, mouseY) <= collisionRadius;
+  }
+
+  /**
+   * Resets apple 
+   * @param index apple reset
+   */
+  public void resetFruit(int index) {
+    fltFruitY[index] = -50 - random(800);
+    fltFruitX[index] = random(width);
+    blnFruitHide[index] = false;
+  }
+
+  /**
+   * Resets wwatermelon 
+   * @param index watermelon reset
+   */
+  public void resetFruit2(int index) {
+    fltFruitY2[index] = -30 - random(800);
+    fltFruitX2[index] = random(width);
+    blnFruitHide2[index] = false;
+  }
+
+  /**
+   * Subtracts player lives if fruit goes below screen
+   */
+  public void decreaseLivesOnMiss() {
+    for (int i = 0; i < fltFruitY.length; i++) {
+    if (fltFruitY[i] >= height || fltFruitY2[i] >= height) {
+      intLives--;
+    }
+    if (intLives == 0) {
+      blnStartTitle = false;
+      blnGameOver = true;
+    }
+  }
+  }
+  /**
+ * Check if fruit is below screen
+ * @return True if fruit is below screen, false otherwise.
+ */
+public boolean anyFruitBelowHeight() {
+  for (int i = 0; i < fltFruitY.length; i++) {
+    if (fltFruitY[i] >= height) {
+      return true;
+    }
+  }
+  for (int i = 0; i < fltFruitY2.length; i++) {
+    if (fltFruitY2[i] >= height) {
+      return true;
+    }
+  }
+  return false;
+}
+
+  /**
+   * Draws heart lives
+   */
+  public void drawLives() {
+    for (int i = intLives; i > 0; i--) {
+      image(imgMisses, 750 + (3 - i) * 30, 20, 40, 40);
+    }
+  }
+
+  /**
+   * Moves the bomb images on the screen
+   */
+  public void drawAndMoveBombs() {
+    for (int i = 0; i < fltBombX.length; i++) {
       if (!blnBombHide[i]) {
         image(imgBomb, fltBombX[i], fltBombY[i], 80, 80);
       }
       fltBombY[i] += intFruitSpeed;
 
-      // Apple collision with katana, hide fruit, increase score
-      if (dist(fltFruitX[i], fltFruitY[i], mouseX, mouseY) < 30) {
-        blnFruitHide[i] = true;
-        intScore += 10;
-      }
-
-      // Watermelon collision with katana, hide fruit, increase score
-      if (dist(fltFruitX2[i], fltFruitY2[i], mouseX, mouseY) < 30) {
-        blnFruitHide2[i] = true;
-        intScore += 10;
-      }
-
-      // Bomb collision with katana, display game over
-      if (dist(fltBombX[i], fltBombY[i], mouseX, mouseY) < 30) {
+      if (intLives != 0 && checkFruitCollision(fltBombX[i], fltBombY[i], 20)) {
+        blnStartTitle = false;
         blnGameOver = true;
       }
-      
-      
 
-      if (blnFruitHide[i] || blnFruitHide2[i] || blnBombHide[i]) {
-        fltFruitY[i] = -50 - random(800);
-        fltFruitX[i] = random(width);
-        fltFruitY2[i] = -30 - random(800);
-        fltFruitX2[i] = random(width);
-        fltBombY[i] = -80 - random(800);
-        fltBombX[i] = random(width);
-      }
-
-      // Check for misses
-      if (fltFruitY[i] > height || fltFruitY2[i] > height || fltBombY[i] > height) {
-        fltFruitY[i] = -50 - random(800);
-        fltFruitX[i] = random(width);
-        fltFruitY2[i] = -30 - random(800);
-        fltFruitX2[i] = random(width);
-        fltBombY[i] = -80 - random(800);
-        fltBombX[i] = random(width);
-        intLives--; // Increase the misses
-        if (intLives == 0) {
-          blnGameOver = true; // Game over if 3 misses
-        }
+      if (fltBombY[i] > height) {
+        resetBomb(i);
       }
     }
+  }
 
-    // Display lives
-    for (int i = intLives; i > 0; i--) {
-      image(imgMisses, 700 + (3 - i) * 30, 20, 40, 40);
-    }
+  /**
+   * Bomb reset
+   * @param index Bomb reset
+   */
+  public void resetBomb(int index) {
+    fltBombY[index] = -80 - random(800);
+    fltBombX[index] = random(width);
+  }
 
-    // Display game over message
-    if (blnGameOver) {
-      image(imgGameOver, 0, 0);
-      textSize(32);
-      fill(255, 0, 0);
-      textAlign(CENTER, CENTER);
-      textFont(createFont("arial bold", 40));
-      text("Your score: " + intScore, width / 2 - 10, height / 2 - 30);
-    }
-
-    // Draw katana slice animation if active
-    if (katanaSliceFrame >= 0) {
-      image(imgKatanaSlice, mouseX, mouseY, 155, 175);
+  /**
+   * Katana slice animation
+   */
+  public void playKatanaSliceAnimation() {
+    if (blnKatanaSlice) {
+      image(imgKatanaSlice, mouseX - 40, mouseY - 40, 80, 80);
       katanaSliceFrame++;
 
-      // Hide katana slice after a certain number of frames
       if (katanaSliceFrame > 10) {
         katanaSliceFrame = -1;
+        blnKatanaSlice = false;
       }
     }
   }
-}
 
-public void mouseClicked() {
+  /**
+   * Mouse click
+   * Katana slice animation, check for fruit collisions
+   */
+  public void mouseClicked() {
     if (!blnGameOver && !blnStartTitle && katanaSliceFrame == -1) {
-        // Katana slice animation
-        blnKatanaSlice = true;
-        katanaSliceFrame = 0;
-    }
-}
-
-  public void playKatanaSliceAnimation() {
-    imageMode(CENTER);
-    image(imgKatanaSlice, mouseX, mouseY);
-    katanaSliceFrame++;
-
-    if(katanaSliceFrame > 10) {
-      katanaSliceFrame = -1;
-      blnKatanaSlice = false;
+      blnKatanaSlice = true;
+      katanaSliceFrame = 0;
+      checkAndHideFruits();
     }
   }
 
-public void mousePressed() {
-  blnStartTitle = false;
-  } 
+  /**
+   * Checks fruit collisions during katana slice animation and hides fruits
+   */
+  public void checkAndHideFruits() {
+    for (int i = 0; i < fltFruitX.length; i++) {
+    if (!blnFruitHide[i] && checkFruitCollision(fltFruitX[i], fltFruitY[i], 20)) {
+      // Reset the fruit position
+      resetFruit(i);
+      blnFruitHide[i] = false;
+    }
+  }
 
-  public void mouseReleased() {
-  blnStartTitle = false;
-  } 
+  for (int i = 0; i < fltFruitX2.length; i++) {
+    if (!blnFruitHide2[i] && checkFruitCollision(fltFruitX2[i], fltFruitY2[i], 20)) {
+      // Reset the fruit position
+      blnFruitHide2[i] = false;
+      resetFruit2(i);
+    }
+  }
+}
 
-  public void mouseDragged() {
+  /**
+   * Mouse pressed
+   * Resets game when it is over or at start title screen
+   */
+  public void mousePressed() {
+    if (blnStartTitle || blnGameOver) {
+      blnStartTitle = false;
+      blnGameOver = false;
+      intScore = 0;
+      intLives = 3;
+      initializeFruitPositions();
+    }
+  }
+
+  /**
+   * Initializes fruit and bomb position at start or end of game
+   */
+  public void initializeFruitPositions() {
+    for (int i = 0; i < fltFruitX.length; i++) {
+      fltFruitX[i] = random(width);
+      fltFruitY[i] = random(-400);
+      blnFruitHide[i] = false;
+    }
+
+    for (int i = 0; i < fltFruitX2.length; i++) {
+      fltFruitX2[i] = random(width);
+      fltFruitY2[i] = random(-300);
+      blnFruitHide2[i] = false;
+    }
+
+    for (int i = 0; i < fltBombX.length; i++) {
+      fltBombX[i] = random(width);
+      fltBombY[i] = random(-100);
+      blnBombHide[i] = false;
+    }
   }
 }
