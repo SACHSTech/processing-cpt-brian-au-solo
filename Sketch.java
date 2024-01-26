@@ -26,19 +26,19 @@ public class Sketch extends PApplet {
   // more variables
   int intScore = 0;
   int intFruitSpeed = 3;
-  int intFruitSpeed2 = 6;
+  int intFruitSpeed2 = 5;
   int intLives = 3;
   int katanaSliceFrame = -1;
 
   // Arrays to store fruit, bomb positions and their states
-  float[] fltFruitY = new float[7];
-  float[] fltFruitX = new float[7];
-  float[] fltFruitY2 = new float[7];
-  float[] fltFruitX2 = new float[7];
+  float[] fltFruitY = new float[4];
+  float[] fltFruitX = new float[4];
+  float[] fltFruitY2 = new float[3];
+  float[] fltFruitX2 = new float[3];
   float[] fltBombX = new float[3];
   float[] fltBombY = new float[3];
-  boolean[] blnFruitHide = new boolean[7];
-  boolean[] blnFruitHide2 = new boolean[7];
+  boolean[] blnFruitHide = new boolean[4];
+  boolean[] blnFruitHide2 = new boolean[3];
   boolean[] blnBombHide = new boolean[3];
 
   /**
@@ -81,23 +81,7 @@ public class Sketch extends PApplet {
     imgMisses = loadImage("heart.png");
 
     // Initialize fruit, bomb positions and their states
-    for (int i = 0; i < fltFruitX.length; i++) {
-      fltFruitX[i] = random(width);
-      fltFruitY[i] = random(-400);
-      blnFruitHide[i] = false;
-    }
-
-    for (int i = 0; i < fltFruitX2.length; i++) {
-      fltFruitX2[i] = random(width);
-      fltFruitY2[i] = random(-300);
-      blnFruitHide2[i] = false;
-    }
-
-    for (int i = 0; i < fltBombX.length; i++) {
-      fltBombX[i] = random(width);
-      fltBombY[i] = random(-100);
-      blnBombHide[i] = false;
-    }
+    initializeFruitPositions();
   }
 
   /**
@@ -106,16 +90,16 @@ public class Sketch extends PApplet {
   public void draw() {
     background(255);
 
-  if (blnStartTitle) {
-    image(imgStartTitle, 0, 0);
-  } else if (blnGameOver) {
-    image(imgGameOver, 0, 0);
-    displayScore();
-  } else {
-    image(imgBackground, 0, 0);
-    drawGameElements();
+    if (blnStartTitle) {
+      image(imgStartTitle, 0, 0);
+    } else if (blnGameOver) {
+      image(imgGameOver, 0, 0);
+      displayScore();
+    } else {
+      image(imgBackground, 0, 0);
+      drawGameElements();
+    }
   }
-}
 
   /**
    * player score
@@ -152,18 +136,15 @@ public class Sketch extends PApplet {
       // Remove the reset condition
       if (fltFruitY[i] > height) {
         intLives--;
+        resetFruit(i);
+        blnFruitHide[i] = false;
       }
   
       if (intLives != 0 && checkFruitCollision(fltFruitX[i], fltFruitY[i], 25)) {
         blnFruitHide[i] = true;
         intScore += 10;
       }
-
-      if (blnFruitHide[i]) {
-      fltFruitY[i] = random(-50);
-      blnFruitHide[i] = false;
     }
-  }
   
     for (int i = 0; i < fltFruitX2.length; i++) {
       if (!blnFruitHide2[i]) {
@@ -174,20 +155,25 @@ public class Sketch extends PApplet {
       // Remove the reset condition
       if (fltFruitY2[i] > height) {
         intLives--;
+        resetFruit2(i);
+        blnFruitHide2[i] = false;
       }
   
       if (intLives != 0 && checkFruitCollision(fltFruitX2[i], fltFruitY2[i], 25)) {
         blnFruitHide2[i] = true;
         intScore += 20;
       }
-
-      if (blnFruitHide2[i]) {
-        fltFruitY2[i] = random(-30);
-        blnFruitHide[i] = false;
-      }
     }
+  
     decreaseLivesOnMiss();
+  
+    // Check if lives are zero and show game over
+    if (intLives == 0) {
+      blnStartTitle = false;
+      blnGameOver = true;
+    }
   }
+
   /**
    * Checks for collision between the katana and fruits
    * @param fruitX fruit X-coordinate
@@ -204,47 +190,57 @@ public class Sketch extends PApplet {
    * @param index apple reset
    */
   public void resetFruit(int index) {
-    fltFruitY[index] = -50 - random(800);
+    fltFruitY[index] = random(-200);
     fltFruitX[index] = random(width);
-    blnFruitHide[index] = false;
   }
 
   /**
-   * Resets wwatermelon 
+   * Resets watermelon 
    * @param index watermelon reset
    */
   public void resetFruit2(int index) {
-    fltFruitY2[index] = -30 - random(800);
+    fltFruitY2[index] = random(-100);
     fltFruitX2[index] = random(width);
-    blnFruitHide2[index] = false;
   }
 
   /**
-   * Subtracts player lives if fruit goes below screen
-   */
-  public void decreaseLivesOnMiss() {
+ * Subtracts player lives if fruit goes below screen
+ */
+public void decreaseLivesOnMiss() {
     for (int i = 0; i < fltFruitY.length; i++) {
-    if (fltFruitY[i] >= height || fltFruitY2[i] >= height) {
+    if (!blnFruitHide[i] && fltFruitY[i] > height) {
       intLives--;
-    }
-    if (intLives == 0) {
-      blnStartTitle = false;
-      blnGameOver = true;
+      resetFruit(i);
+      blnFruitHide[i] = false;
     }
   }
+
+  for (int i = 0; i < fltFruitY2.length; i++) {
+    if (!blnFruitHide2[i] && fltFruitY2[i] > height) {
+      intLives--;
+      resetFruit2(i);
+      blnFruitHide2[i] = false;
+    }
   }
-  /**
- * Check if fruit is below screen
- * @return True if fruit is below screen, false otherwise.
+
+  if (intLives == 0) {
+    blnStartTitle = false;
+    blnGameOver = true;
+  }
+}
+
+/**
+ * Check if any fruit is below screen
+ * @return True if any fruit is below screen, false otherwise.
  */
 public boolean anyFruitBelowHeight() {
   for (int i = 0; i < fltFruitY.length; i++) {
-    if (fltFruitY[i] >= height) {
+    if (!blnFruitHide[i] && fltFruitY[i] >= height) {
       return true;
     }
   }
   for (int i = 0; i < fltFruitY2.length; i++) {
-    if (fltFruitY2[i] >= height) {
+    if (!blnFruitHide2[i] && fltFruitY2[i] >= height) {
       return true;
     }
   }
@@ -286,7 +282,7 @@ public boolean anyFruitBelowHeight() {
    * @param index Bomb reset
    */
   public void resetBomb(int index) {
-    fltBombY[index] = -80 - random(800);
+    fltBombY[index] = random(-80);
     fltBombX[index] = random(width);
   }
 
@@ -322,21 +318,21 @@ public boolean anyFruitBelowHeight() {
    */
   public void checkAndHideFruits() {
     for (int i = 0; i < fltFruitX.length; i++) {
-    if (!blnFruitHide[i] && checkFruitCollision(fltFruitX[i], fltFruitY[i], 20)) {
-      // Reset the fruit position
-      resetFruit(i);
-      blnFruitHide[i] = false;
+      if (!blnFruitHide[i] && checkFruitCollision(fltFruitX[i], fltFruitY[i], 20)) {
+        // Reset the fruit position
+        resetFruit(i);
+        blnFruitHide[i] = true;  // Set hide state to true
+      }
+    }
+  
+    for (int i = 0; i < fltFruitX2.length; i++) {
+      if (!blnFruitHide2[i] && checkFruitCollision(fltFruitX2[i], fltFruitY2[i], 20)) {
+        // Reset the fruit position
+        resetFruit2(i);
+        blnFruitHide2[i] = true;  // Set hide state to true
+      }
     }
   }
-
-  for (int i = 0; i < fltFruitX2.length; i++) {
-    if (!blnFruitHide2[i] && checkFruitCollision(fltFruitX2[i], fltFruitY2[i], 20)) {
-      // Reset the fruit position
-      blnFruitHide2[i] = false;
-      resetFruit2(i);
-    }
-  }
-}
 
   /**
    * Mouse pressed
